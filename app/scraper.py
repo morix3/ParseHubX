@@ -1,14 +1,23 @@
 import requests
 from bs4 import BeautifulSoup
+import pprint
+from urllib.parse import urljoin
 
-def parse_website(url):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
+def find_all_links(base_url):
+    response = requests.get(base_url, timeout=5)
+    soup = BeautifulSoup(response.text, "html.parser")
 
-    site_title = soup.title.string if soup.title else "Без заголовка"
-    meta_tags = {tag.get('name'): tag.get('content') for tag in soup.find_all('meta')}
+    links = set()
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        absolute_url = urljoin(base_url, href) 
+        if absolute_url.startswith(base_url):  
+            links.add(absolute_url)
 
-    return {
-        'title': site_title,
-        'meta_tags': meta_tags
-    }
+    return list(links)
+
+
+all_links = find_all_links('https://calorizator.ru')
+pprint.pprint(all_links)
+
+
